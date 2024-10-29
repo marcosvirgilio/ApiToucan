@@ -20,22 +20,22 @@ $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 
 // Check if data was received and is in the correct format
-if (!isset($data['dtLeitura']) || !isset($data['vlEncoder']) || 
-    !isset($data['vlCorrente']) || !isset($data['vlTensao'])) {
+if (!isset($data['idDispositivo']) || !isset($data['vlEncoder']) 
+	|| !isset($data['vlCorrente']) || !isset($data['vlTensao'])) {
     echo json_encode(["error" => "Invalid input data."]);
     exit();
 }
 
 // Prepare SQL insert statement (without idDispositivo)
 $sql = $con->prepare("
-    INSERT INTO leitura (dtLeitura, vlEncoder, vlCorrente, vlTensao) 
-    VALUES (?, ?, ?, ?)
+    INSERT INTO leitura (dtLeitura,idDispositivo, vlEncoder, vlCorrente, vlTensao) 
+    VALUES (now(),?,?,?,?)
 ");
 
 // Bind parameters to the prepared statement
 $sql->bind_param(
     "sddd", 
-    $data['dtLeitura'], 
+    $data['idDispositivo'], 
     $data['vlEncoder'], 
     $data['vlCorrente'], 
     $data['vlTensao']
