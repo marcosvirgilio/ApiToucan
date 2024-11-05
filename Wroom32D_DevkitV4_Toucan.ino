@@ -35,22 +35,23 @@ HTTPClient http;
 //Instanciando Sensor corrente INA219
 Adafruit_INA219 ina219;
 //Variáveis leitura corrente e tensão
-float voltagem_V = 0;
-float corrente_A = 0;
+float tensao_V = 0;
+float corrente_mA = 0;
 
 //Funcao le valores sensor INA219
 void medeCorrenteTensao() {
-  voltagem_V = ina219.getBusVoltage_V();
-  corrente_A = ina219.getCurrent_mA();
+  tensao_V = ina219.getBusVoltage_V();
+  //pega corrente convertida de A para mA
+  corrente_mA = abs(ina219.getCurrent_mA()/1000);
   Serial.print("V:");
-  Serial.println(voltagem_V);
+  Serial.println(tensao_V);
   Serial.print("mah:");
-  Serial.println(abs(corrente_A / 1000));
+  Serial.println(corrente_mA);
   delay(2000);
 }
 
 //Funcao que envia json para servidor quando encoder detecta movimento
-void postDataToServer(int encoder, float corrente, float tensao) {
+void postDataToServer() {
   // Block until we are able to connect to the WiFi access point
   if (wifiMulti.run() == WL_CONNECTED) {
     http.begin("http://marcosvirgilio.dev.br/toucan/cadLeitura.php");
@@ -60,9 +61,9 @@ void postDataToServer(int encoder, float corrente, float tensao) {
     //idDispositivo é fixo por placa
     doc["idDispositivo"] = idDispositivo;
     // Adicionar valores lidos
-    doc["vlEncoder"] = encoder;
-    doc["vlCorrente"] = corrente;
-    doc["vlTensao"] = tensao;
+    doc["vlEncoder"] = voltas;
+    doc["vlCorrente"] = corrente_mA;
+    doc["vlTensao"] = tensao_V;
 
     String requestBody;
     serializeJson(doc, requestBody);
@@ -103,10 +104,7 @@ void rotary_loop() {
       //Faz leitura sensor INA2019
       medeCorrenteTensao();
       //manda dados para o servidor
-      //Converte corrente de A para mA
-      float corrente_mA = abs(corrente_A / 1000);
-      //passando o valor do encoder, corrente  e tensão
-      postDataToServer(voltas, corrente_mA, voltagem_V);
+      postDataToServer();
     }
   }
   if (rotaryEncoder.isEncoderButtonClicked()) {
